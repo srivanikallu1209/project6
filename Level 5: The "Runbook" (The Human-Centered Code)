@@ -1,0 +1,19 @@
+# 📖 Incident Response Runbook: High API Latency
+
+## 🚨 Symptom
+- P95 Latency > 500ms
+- Alert: `ServiceLatencyHigh` triggered in PagerDuty
+
+## 🔍 Diagnostic Steps
+1. **Check Database Connections:**
+   `kubectl logs -l app=enterprise-platform | grep "ConnectionPool"`
+2. **Inspect Traffic Spikes:**
+   Open Grafana Dashboard -> [Link to Dashboard]
+3. **Trace Slow Requests:**
+   Go to Jaeger and filter by `http.status_code=200` and `duration > 500ms`.
+
+## 🛠️ Mitigation
+- **Scale Up:** If CPU > 80%, increase replicas:
+  `kubectl scale deployment enterprise-platform --replicas=10`
+- **Clear Cache:** If Redis fragmentation is high, trigger cache eviction via:
+  `POST /api/v1/management/cache/clear`

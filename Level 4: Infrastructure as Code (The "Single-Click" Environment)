@@ -1,0 +1,28 @@
+# infrastructure/eks-cluster.tf
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 19.0"
+
+  cluster_name    = "enterprise-production-cluster"
+  cluster_version = "1.27"
+
+  # Networking: Private subnets for security
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+
+  # Managed Node Groups with Auto-scaling
+  eks_managed_node_groups = {
+    general = {
+      instance_types = ["t3.large"]
+      min_size     = 3
+      max_size     = 10
+      desired_size = 3
+    }
+  }
+
+  # Encryption at rest for secrets
+  cluster_encryption_config = {
+    resources = ["secrets"]
+    provider_key_arn = aws_kms_key.eks.arn
+  }
+}

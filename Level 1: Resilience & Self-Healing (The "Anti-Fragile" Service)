@@ -1,0 +1,21 @@
+// src/main/java/com/enterprise/service/ResilientOrderService.java
+@Service
+@Slf4j
+public class ResilientOrderService {
+
+    private final PaymentClient paymentClient;
+
+    @CircuitBreaker(name = "paymentService", fallbackMethod = "handlePaymentFailure")
+    @Retry(name = "paymentRetry")
+    @Bulkhead(name = "paymentBulkhead") // Limits concurrent calls to prevent resource exhaustion
+    public PaymentResponse processOrder(OrderRequest request) {
+        log.info("Processing payment for order: {}", request.getOrderId());
+        return paymentClient.authorize(request);
+    }
+
+    // The Fallback: Executed when the Circuit Breaker is OPEN or payment fails
+    public PaymentResponse handlePaymentFailure(OrderRequest request, Throwable t) {
+        log.error("Payment Service unavailable for order {}. Reason: {}", request.getOrderId(), t.getMessage());
+        return new PaymentResponse("PENDING", "Payment system is currently undergoing maintenance. We will retry shortly.");
+    }
+}

@@ -1,0 +1,19 @@
+// src/main/java/com/enterprise/controller/AdminController.java
+@RestController
+@RequestMapping("/api/v1/admin")
+public class AdminController {
+
+    @GetMapping("/audit-logs")
+    // Role-Based Access Control (RBAC) + Scope Check
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('SCOPE_audit:read')")
+    public Flux<AuditLog> getSystemLogs() {
+        return auditService.findAll();
+    }
+
+    @PostMapping("/restrict-user/{id}")
+    // Domain-Level Security: Only managers can restrict users in their own department
+    @PreAuthorize("@securityService.isManagerOf(#userId)")
+    public Mono<Void> restrictUser(@PathVariable String userId) {
+        return userService.suspend(userId);
+    }
+}

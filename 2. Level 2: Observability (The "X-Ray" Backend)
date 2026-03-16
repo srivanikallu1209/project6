@@ -1,0 +1,25 @@
+// src/main/java/com/enterprise/config/ObservationConfig.java
+@Configuration
+public class ObservationConfig {
+
+    private final MeterRegistry registry;
+
+    public ObservationConfig(MeterRegistry registry) {
+        this.registry = registry;
+    }
+
+    public void recordBusinessMetric(String region, double amount) {
+        Counter.builder("enterprise.sales.revenue")
+            .tag("region", region)
+            .description("Total revenue processed by region")
+            .register(registry)
+            .increment(amount);
+    }
+    
+    // Custom Timer to track how long high-value transactions take
+    public Timer transactionTimer() {
+        return Timer.builder("enterprise.transaction.latency")
+            .publishPercentiles(0.5, 0.95, 0.99) // P50, P95, and P99 latency
+            .register(registry);
+    }
+}
